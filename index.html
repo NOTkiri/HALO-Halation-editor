@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17142b"><meta name="description" content="HALO — a retro-inspired halation editor. Everything runs locally in your browser.">
+<title>Halo — Halation Editor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='1' y='1' width='38' height='38' rx='6' fill='%231d1934' stroke='%2373fbd3' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='17' fill='%23ff5c9a' fill-opacity='.45'/%3E%3Cpath fill='%23fff4de' d='M11 11h5v7h8v-7h5v18h-5v-7h-8v7h-5z'/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:dark;--bg:#17142b;--panel:#211c3a;--deep:#1a1630;--ink:#f8f0d8;--muted:#b0a8ca;--line:#4a4270;--pink:#ff5c9a;--neon:#73fbd3;--gold:#ffd166;--violet:#7b3cff;--shadow:#0b0918;--pad:16px}
+*{box-sizing:border-box}[hidden],.hidden{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg) linear-gradient(rgba(115,251,211,.035) 1px,transparent 1px) 0 0/18px 18px,linear-gradient(90deg,rgba(115,251,211,.035) 1px,transparent 1px) 0 0/18px 18px;color:var(--ink);font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+main{max-width:1180px;margin:auto;padding:env(safe-area-inset-top) var(--pad) calc(32px + env(safe-area-inset-bottom))}
+button,select,input{font:inherit;color:inherit}button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;height:64px;border-bottom:2px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}.brand svg{width:40px;height:40px;flex:none;filter:drop-shadow(0 0 8px rgba(255,92,154,.55))}
+.wm b{display:block;font-size:22px;line-height:1;letter-spacing:.14em;text-shadow:3px 3px 0 var(--violet)}.wm small{color:var(--muted);font-size:10px;letter-spacing:.12em}
+.btn{min-height:44px;padding:10px 14px;border:2px solid var(--neon);border-radius:2px;background:var(--panel);color:var(--neon);font-weight:800;font-size:12px;letter-spacing:.04em;box-shadow:3px 3px 0 var(--shadow);transition:transform .08s,box-shadow .08s}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}.btn:disabled{opacity:.5;cursor:progress}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:#17142b}.btn.mini{min-height:40px;padding:8px 12px}.btn.sm{min-height:38px;padding:7px 10px;font-size:11px}
+.intro{padding:18px 0 14px}.intro h1{margin:0 0 6px;font-size:clamp(24px,5vw,36px);line-height:1.1;letter-spacing:-.03em;text-shadow:3px 3px 0 var(--violet)}.intro p{margin:0;color:var(--muted);font-size:12px;max-width:62ch}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.step{min-width:0;text-align:left;padding:10px;border:2px solid var(--line);border-radius:2px;background:var(--deep);color:var(--muted);box-shadow:3px 3px 0 var(--shadow)}
+.step b{display:block;font-size:12px}.step small{display:block;font-size:10px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step.active{background:#322650;border-color:var(--pink);color:var(--ink);box-shadow:inset 0 -3px var(--pink),3px 3px 0 var(--shadow)}
+.layout{display:grid;gap:16px}
+.viewer{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;min-width:0;background:var(--bg);padding:8px 0 6px}
+.stage{position:relative;display:flex;align-items:center;justify-content:center;height:clamp(200px,34vh,340px);height:clamp(200px,34svh,340px);overflow:hidden;background:#0c0a19;border:2px solid #7569a5;border-radius:2px;box-shadow:5px 5px 0 var(--shadow)}
+.stage.drag{border-color:var(--neon)}
+#screen{display:none;width:100%;height:100%;object-fit:contain}#screen.on{display:block}
+.placeholder{text-align:center;padding:20px;max-width:360px}.glyph{font-size:44px;line-height:1;color:var(--neon);text-shadow:3px 3px 0 var(--violet)}
+.placeholder strong{display:block;margin:6px 0;letter-spacing:.1em}.placeholder p{margin:0 0 14px;font-size:11px;color:var(--muted)}
+.badge{position:absolute;top:8px;left:8px;padding:4px 8px;background:var(--neon);color:#17142b;font-size:10px;font-weight:800;letter-spacing:.06em}
+.compare{position:absolute;top:8px;right:8px;min-height:36px;padding:6px 10px;border:0;background:var(--pink);color:#17142b;font-weight:800;font-size:11px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+.viewrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}.viewrow button{min-height:36px;padding:6px 10px;border:1px solid var(--line);border-radius:2px;background:transparent;color:var(--muted);font-size:11px}
+.viewrow button.active{background:#33284e;color:var(--neon);border-color:var(--neon)}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:2px;padding:var(--pad);box-shadow:5px 5px 0 var(--shadow);min-width:0}
+.panelhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.panelhead h2{margin:0;font-size:12px;letter-spacing:.1em;color:var(--neon)}
+.desc{margin:0 0 14px;color:var(--muted);font-size:12px;max-width:68ch}
+.slider{padding:12px 0;border-top:1px dashed var(--line)}.desc+.slider{border-top:0}
+.slab{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-weight:700}.num{color:var(--gold);font-variant-numeric:tabular-nums}
+.ends{display:flex;justify-content:space-between;margin-top:2px;color:#8c83ad;font-size:10px}
+input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:24px;margin:0;background:transparent;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border:2px solid var(--line);background:linear-gradient(90deg,var(--pink) var(--p,50%),#2c2650 var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7px;background:var(--ink);border:2px solid var(--shadow);box-shadow:2px 2px 0 var(--violet)}
+input[type=range]::-moz-range-track{height:8px;border:2px solid var(--line);background:#2c2650}input[type=range]::-moz-range-progress{height:8px;background:var(--pink)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:0;background:var(--ink);border:2px solid var(--shadow);box-shadow:2px 2px 0 var(--violet)}
+.actions{display:flex;gap:10px;margin-top:18px}.actions .btn{flex:1;min-width:0}
+.presets{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:14px}.presets select,.presets input,.cropbar select{min-width:0;width:100%;min-height:38px;padding:7px 9px;border:2px solid var(--line);border-radius:2px;background:var(--bg)}
+.dim{opacity:.45}.tones{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0 0;padding-bottom:20px}
+.tone{position:relative;height:32px;min-width:0;border:2px solid #4c446c;border-radius:2px;background:var(--c);box-shadow:2px 2px 0 var(--shadow)}
+.tone::after{content:attr(data-name);position:absolute;top:36px;left:-4px;right:-4px;text-align:center;font-size:9px;color:var(--muted);pointer-events:none}.tone.active{outline:2px solid var(--neon);outline-offset:2px}
+.colorrow{display:flex;align-items:center;gap:12px;margin:6px 0 10px;padding:10px;border:2px solid var(--line);border-radius:2px;background:var(--deep)}
+.colorrow input[type=color]{flex:none;width:44px;height:44px;padding:0;border:0;background:none;cursor:pointer}.colorrow div{flex:1;min-width:0;font-size:12px}.colorrow small{display:block;color:var(--muted);overflow-wrap:anywhere}
+.cropbar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:14px;border:2px solid var(--line);border-radius:2px;background:var(--deep)}.cropbar .full{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;color:var(--neon)}.cropbar .full span{color:var(--muted);font-size:11px}
+.status{min-height:18px;margin-top:14px;color:var(--neon);font-size:11px;overflow-wrap:anywhere}.hint{margin:10px 0 0;color:#938bb2;font-size:10px;line-height:1.7}
+@media(min-width:800px){:root{--pad:24px}.layout{grid-template-columns:minmax(0,1.3fr) minmax(340px,.7fr);gap:24px;align-items:start}.viewer{top:16px;padding:0}.stage{height:auto;aspect-ratio:4/3}.panel{padding:22px;min-height:560px}}
+@media(max-width:400px){:root{--pad:12px}.step{padding:9px 6px}.step small{display:none}.tone::after{font-size:8px}.actions{gap:8px}.actions .btn{padding:10px 6px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><main>
+<header class="nav">
+ <div class="brand"><svg viewBox="0 0 40 40" role="img" aria-label="Halo logo"><defs><radialGradient id="lg"><stop offset="0" stop-color="#fff4de"/><stop offset=".4" stop-color="#ff5c9a" stop-opacity=".85"/><stop offset="1" stop-color="#ff5c9a" stop-opacity="0"/></radialGradient></defs><rect x="1" y="1" width="38" height="38" rx="6" fill="#1d1934" stroke="#73fbd3" stroke-width="2"/><circle cx="20" cy="20" r="17" fill="url(#lg)"/><path fill="#7b3cff" d="M12.5 12.5h5v7h8v-7h5v18h-5v-7h-8v7h-5z"/><path fill="#fff4de" d="M11 11h5v7h8v-7h5v18h-5v-7h-8v7h-5z"/></svg><div class="wm"><b>HALO</b><small>halation editor</small></div></div>
+ <button class="btn mini" id="export">Export PNG</button>
+</header>
+<section class="intro"><h1>Build your glow</h1><p>Pick the highlights, tune the halation, frame the shot. Photos never leave your device.</p></section>
+<div class="steps"><button class="step active" data-step="1"><b>1 · Select</b><small>Highlights + feather</small></button><button class="step" data-step="2"><b>2 · Halation</b><small>Color + glow</small></button><button class="step" data-step="3"><b>3 · Crop</b><small>Frame your image</small></button></div>
+<div class="layout">
+<section class="viewer">
+ <div class="stage" id="stage"><div class="placeholder" id="placeholder"><div class="glyph">▣</div><strong>INSERT IMAGE</strong><p>Load or drop a photo. Neon signs, night streets and lamps work best.</p><button class="btn" id="pick">Load photo</button></div><canvas id="screen"></canvas><span class="badge" id="badge" hidden></span><button class="compare" id="compare" hidden>Hold for original</button></div>
+ <div class="viewrow"><button id="viewResult" class="active">Result</button><button id="viewMask">Selection mask</button><button id="viewOriginal">Original</button></div>
+</section>
+<section class="panel">
+<div id="panel1"><div class="panelhead"><h2>HIGHLIGHTS + FEATHER</h2><button class="btn sm" id="autoThreshold">Auto</button></div><p class="desc">Choose which bright pixels create halation and how softly their edges fade.</p>
+ <div class="slider"><div class="slab"><label for="threshold">Highlight threshold</label><span class="num" id="thresholdV"></span></div><input id="threshold" type="range" min="5" max="98" value="72"><div class="ends"><span>More selected</span><span>Brightest only</span></div></div>
+ <div class="slider"><div class="slab"><label for="selectSoft">Selection transition</label><span class="num" id="selectSoftV"></span></div><input id="selectSoft" type="range" min="1" max="45" value="12"><div class="ends"><span>Hard cutoff</span><span>Soft cutoff</span></div></div>
+ <div class="slider"><div class="slab"><label for="feather">Feather radius</label><span class="num" id="featherV"></span></div><input id="feather" type="range" min="0" max="100" value="18"><div class="ends"><span>Crisp edges</span><span>Very soft</span></div></div>
+ <div class="viewrow"><button id="maskOverlay" class="active">Overlay on photo</button><button id="maskOnly">Mask only</button></div>
+ <div class="actions"><button class="btn" id="maskBtn">Preview selection</button><button class="btn primary" data-next="2">Halation →</button></div>
+ <p class="hint">In selection view, pink marks the pixels that will glow. If it covers the whole photo, raise the threshold.</p></div>
+<div id="panel2" class="hidden"><div class="panelhead"><h2>HALATION</h2></div><p class="desc">Adaptive glow samples the real colors of your highlights, so each light blooms in its own hue. Switch to a single tint for a stylized look.</p>
+ <div class="presets"><select id="presetSelect" aria-label="Saved presets"></select><button class="btn sm" id="loadPreset">Load</button><input id="presetName" maxlength="40" placeholder="Preset name" aria-label="Preset name"><button class="btn sm" id="savePreset">Save</button></div>
+ <div class="slab"><span>Glow color</span><span class="num" id="toneLabel"></span></div>
+ <div class="viewrow" style="margin:6px 0 4px"><button id="adaptiveMode" class="active">Adaptive colors</button><button id="tintMode">Single tint</button></div>
+ <div id="glowOpts"><div class="tones" id="tones"><button class="tone active" data-tone="pink" data-name="Peach" style="--c:#f1a0a0" aria-label="Peach pink"></button><button class="tone" data-tone="red" data-name="Red" style="--c:#e94d3c" aria-label="Red"></button><button class="tone" data-tone="orange" data-name="Amber" style="--c:#ed8b43" aria-label="Amber"></button><button class="tone" data-tone="gold" data-name="Gold" style="--c:#e8c16b" aria-label="Gold"></button><button class="tone" data-tone="blue" data-name="Blue" style="--c:#6d9ed8" aria-label="Blue"></button></div>
+ <div class="colorrow"><input id="customColor" type="color" value="#ff8f9d" aria-label="Custom glow color"><div>Custom color<small id="customHex">#FF8F9D · pick, then apply</small></div><button class="btn sm" id="useCustom">Apply</button></div></div>
+ <div class="slider"><div class="slab"><label for="spread">Glow spread</label><span class="num" id="spreadV"></span></div><input id="spread" type="range" min="1" max="100" value="72"><div class="ends"><span>Tight halo</span><span>Wide bloom</span></div></div>
+ <div class="slider"><div class="slab"><label for="amount">Halation amount</label><span class="num" id="amountV"></span></div><input id="amount" type="range" min="0" max="100" value="78"><div class="ends"><span>Subtle</span><span>Heavy</span></div></div>
+ <div class="actions"><button class="btn" data-prev="1">← Highlights</button><button class="btn primary" data-next="3">Crop →</button></div></div>
+<div id="panel3" class="hidden"><div class="panelhead"><h2>CROP</h2></div><p class="desc">Choose a framing ratio. The crop is centered, applied to the preview and the export; your original is untouched.</p>
+ <div class="cropbar"><div class="full"><strong>Aspect ratio</strong><span id="cropDimensions">—</span></div><select id="cropRatio" aria-label="Aspect ratio"><option value="original">Original</option><option value="1:1">Square · 1:1</option><option value="4:5">Portrait · 4:5</option><option value="3:2">Photo · 3:2</option><option value="4:3">Classic · 4:3</option><option value="16:9">Widescreen · 16:9</option><option value="9:16">Story · 9:16</option></select><button class="btn sm" id="resetCrop">Reset</button></div>
+ <div class="actions"><button class="btn" data-prev="2">← Halation</button><button class="btn primary" id="exportCrop">Export PNG</button></div></div>
+<input id="file" type="file" accept="image/*" hidden>
+<div id="status" class="status" role="status" aria-live="polite">Open a photo to begin.</div>
+<p class="hint">Editing runs on a fast preview. Export re-renders at full resolution. Presets are saved in this browser.</p>
+</section></div></main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),$$=s=>document.querySelectorAll(s);
+const screen=$('screen'),sctx=screen.getContext('2d');
+const PREVIEW_MAX=1600,IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),MAX_PIXELS=IOS?16e6:50e6;
+const TONES={red:[255,65,48],orange:[255,128,64],pink:[255,143,157],blue:[105,155,255],gold:[255,194,96]};
+const SLIDERS=['threshold','selectSoft','feather','spread','amount'],LEVEL={threshold:0,selectSoft:0,feather:0,spread:1,amount:2};
+let img=null,filename='photo',W=0,H=0,PW=0,PH=0,step=1,view='result',maskMode='overlay',tone='pink',custom=null,glowMode='adaptive';
+let src=null,out=null,cvSrc=null,cvRes=null,cvMask=null,mask=null,glow=null,stale=[1,1,1],maskViewStale=true,raf=0,exporting=false,holdPrev=null,backendOK=false;
+
+/* ---------- helpers ---------- */
+const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+const status=s=>{$('status').textContent=s};
+const cl=v=>v<0?0:v>255?255:v;
+const toHex=rgb=>'#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+const hexToRgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));
+// Step-down scaling: halve repeatedly so big photos downscale without aliasing.
+function scaled(s,sw,sh,tw,th){let cur=s,cw=sw,ch=sh;
+ while(cw/2>=tw&&ch/2>=th){const nw=Math.max(tw,cw>>1),nh=Math.max(th,ch>>1),c=mk(nw,nh),x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cur,0,0,cw,ch,0,0,nw,nh);if(cur!==s)cur.width=0;cur=c;cw=nw;ch=nh}
+ const c=mk(tw,th),x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(cur,0,0,cw,ch,0,0,tw,th);if(cur!==s)cur.width=0;return c}
+
+/* ---------- blur: 3-pass box blur ≈ Gaussian, O(pixels) at any radius.
+   Replaces ctx.filter='blur()', which Safari/iOS ignore (no feather, no glow there). ---------- */
+function boxSizes(sigma,n=3){const wi=Math.sqrt(12*sigma*sigma/n+1);let wl=Math.floor(wi);if(wl%2===0)wl--;const wu=wl+2,m=Math.round((12*sigma*sigma-n*wl*wl-4*n*wl-3*n)/(-4*wl-4));return Array.from({length:n},(_,i)=>i<m?wl:wu)}
+function pass(a,b,w,h,ch,r,horiz){
+ const n=horiz?w:h,lines=horiz?h:w,es=horiz?ch:w*ch,ls=horiz?w*ch:ch;r=Math.min(r,(n-1)>>1);if(r<1){b.set(a);return}
+ const k=1/(2*r+1);
+ for(let c=0;c<ch;c++)for(let l=0;l<lines;l++){
+  let ti=l*ls+c,li=ti,ri=ti+r*es;const fv=a[ti],lv=a[ti+(n-1)*es];let v=(r+1)*fv;
+  for(let j=0;j<r;j++)v+=a[ti+j*es];
+  for(let j=0;j<=r;j++){v+=a[ri]-fv;ri+=es;b[ti]=v*k;ti+=es}
+  for(let j=r+1;j<n-r;j++){v+=a[ri]-a[li];ri+=es;li+=es;b[ti]=v*k;ti+=es}
+  for(let j=n-r;j<n;j++){v+=lv-a[li];li+=es;b[ti]=v*k;ti+=es}}}
+function blur(a,w,h,ch,sigma){if(sigma<.5)return;const t=new a.constructor(a.length);for(const s of boxSizes(sigma)){const r=(s-1)>>1;pass(a,t,w,h,ch,r,true);pass(t,a,w,h,ch,r,false)}}
+
+/* ---------- pipeline (pure typed-array math, shared by preview and full-res export) ---------- */
+const params=()=>({thr:+$('threshold').value*2.55,soft:+$('selectSoft').value*.55+1,feather:+$('feather').value,spread:+$('spread').value,amount:+$('amount').value/100,adaptive:glowMode==='adaptive',rgb:custom||TONES[tone]});
+// Stage 1: highlight mask (1 byte/pixel instead of a 4-byte canvas), feathered.
+function computeMask(d,w,h,p){const m=new Uint8ClampedArray(w*h),lo=p.thr-p.soft,inv=1/(2*p.soft);
+ for(let i=0,j=0;j<m.length;i+=4,j++){let t=(.2126*d[i]+.7152*d[i+1]+.0722*d[i+2]-lo)*inv;if(t<=0)continue;t=t>=1?1:t*t*(3-2*t);m[j]=t*255}
+ blur(m,w,h,1,p.feather*Math.max(w,h)/1400);return m}
+// Stage 2: glow layer. A wide bloom is smooth, so it is built at reduced size (block-averaged) and blurred there.
+function computeGlow(d,m,w,h,p){
+ const sigma=Math.max(.2,p.spread*Math.max(w,h)/950),f=Math.max(1,Math.floor(sigma/5)),sw=Math.ceil(w/f),sh=Math.ceil(h/f),g=new Float32Array(sw*sh*3);
+ for(let y=0;y<h;y++){const row=(y/f|0)*sw;for(let x=0;x<w;x++){const j=y*w+x,a=m[j];if(!a)continue;const i=j*4,o=(row+(x/f|0))*3,k=a/255;let r,gr,b;
+  if(p.adaptive){const R=d[i],G=d[i+1],B=d[i+2],mid=(R+G+B)/3;r=cl((mid+(R-mid)*1.18)*1.08);gr=cl((mid+(G-mid)*1.18)*1.08);b=cl((mid+(B-mid)*1.18)*1.08)}else[r,gr,b]=p.rgb;
+  g[o]+=r*k;g[o+1]+=gr*k;g[o+2]+=b*k}}
+ if(f>1)for(let sy=0;sy<sh;sy++){const bh=Math.min(f,h-sy*f);for(let sx=0;sx<sw;sx++){const n=1/(bh*Math.min(f,w-sx*f)),o=(sy*sw+sx)*3;g[o]*=n;g[o+1]*=n;g[o+2]*=n}}
+ blur(g,sw,sh,3,sigma/f);return{g,sw,sh,f}}
+// Stage 3: screen-blend glow (bilinear upsample) + faded grade. Safe in place (o===s).
+function composite(s,o,G,w,h,k){
+ const{g,sw,sh,f}=G,xs=new Int32Array(w),xf=new Float32Array(w),add=[2,.5,1];
+ for(let x=0;x<w;x++){let u=(x+.5)/f-.5;u=u<0?0:u>sw-1?sw-1:u;xs[x]=u|0;xf[x]=u-(u|0)}
+ for(let y=0;y<h;y++){let v=(y+.5)/f-.5;v=v<0?0:v>sh-1?sh-1:v;const y0=v|0,fy=v-y0,r0=y0*sw,r1=Math.min(sh-1,y0+1)*sw;
+  for(let x=0;x<w;x++){const x0=xs[x],x1=Math.min(sw-1,x0+1),fx=xf[x],i=(y*w+x)*4,
+   A=(r0+x0)*3,B=(r0+x1)*3,C=(r1+x0)*3,D=(r1+x1)*3,w0=(1-fx)*(1-fy),w1=fx*(1-fy),w2=(1-fx)*fy,w3=fx*fy;
+   for(let c=0;c<3;c++){const P=(g[A+c]*w0+g[B+c]*w1+g[C+c]*w2+g[D+c]*w3)*k/255,b=s[i+c]/255;o[i+c]=(.012+(b+P-b*P)*.976)*255+add[c]}
+   o[i+3]=s[i+3]}}}
+
+/* ---------- preview: staged cache, so a slider only redoes what it affects ---------- */
+function invalidate(l){for(let i=l;i<3;i++)stale[i]=1;if(l===0)maskViewStale=true}
+function ensureMask(){if(stale[0]){mask=computeMask(src.data,PW,PH,params());stale[0]=0;maskViewStale=true}}
+function ensureResult(){ensureMask();const p=params();
+ if(stale[1]){glow=computeGlow(src.data,mask,PW,PH,p);stale[1]=0}
+ if(stale[2]){composite(src.data,out.data,glow,PW,PH,p.amount);cvRes.getContext('2d').putImageData(out,0,0);stale[2]=0}}
+const BG=[23,20,17],PK=[255,130,150];
+function buildMaskView(){const d=new ImageData(PW,PH),o=d.data,s=src.data,only=maskMode==='only',gain=only?1:.72;
+ for(let i=0,j=0;j<mask.length;i+=4,j++){const a=mask[j]/255*gain;for(let c=0;c<3;c++){const B=only?BG[c]:s[i+c];o[i+c]=B+a*(B+PK[c]-B*PK[c]/255-B)}o[i+3]=255}
+ cvMask.getContext('2d').putImageData(d,0,0);maskViewStale=false}
+function cropRect(w,h){const v=$('cropRatio').value;if(v==='original')return{x:0,y:0,w,h};const[a,b]=v.split(':').map(Number),t=a/b;let cw=w,ch=h;if(w/h>t)cw=Math.round(h*t);else ch=Math.round(w/t);return{x:(w-cw)>>1,y:(h-ch)>>1,w:cw,h:ch}}
+function paint(){if(!img)return;let c;const t0=performance.now();
+ if(view==='mask'){ensureMask();if(maskViewStale)buildMaskView();c=cvMask}else{ensureResult();c=view==='original'?cvSrc:cvRes}
+ const r=step===3&&view!=='mask'?cropRect(PW,PH):{x:0,y:0,w:PW,h:PH};
+ if(screen.width!==r.w||screen.height!==r.h){screen.width=r.w;screen.height=r.h}
+ sctx.drawImage(c,r.x,r.y,r.w,r.h,0,0,r.w,r.h);
+ if(view==='result')status('Ready · '+W+' × '+H+' px source · '+Math.round(performance.now()-t0)+' ms preview')}
+const schedule=()=>{if(!raf)raf=requestAnimationFrame(()=>{raf=0;paint()})};
+
+/* ---------- UI state ---------- */
+function updateLabels(){$('thresholdV').textContent=$('threshold').value+'%';$('selectSoftV').textContent=$('selectSoft').value;$('featherV').textContent=$('feather').value+' px';$('spreadV').textContent=$('spread').value;$('amountV').textContent=$('amount').value+'%';
+ SLIDERS.forEach(id=>{const e=$(id);e.style.setProperty('--p',(e.value-e.min)/(e.max-e.min)*100+'%')})}
+function syncGlowUI(){const ad=glowMode==='adaptive';$('adaptiveMode').classList.toggle('active',ad);$('tintMode').classList.toggle('active',!ad);$('glowOpts').inert=ad;$('glowOpts').classList.toggle('dim',ad);
+ $$('.tone').forEach(t=>t.classList.toggle('active',!custom&&t.dataset.tone===tone));const a=document.querySelector('.tone.active');
+ $('toneLabel').textContent=ad?'Adaptive':custom?toHex(custom):a.dataset.name}
+function setView(v){view=v;$('viewResult').classList.toggle('active',v==='result');$('viewMask').classList.toggle('active',v==='mask');$('viewOriginal').classList.toggle('active',v==='original');schedule()}
+function setStep(n){step=n;$$('.step').forEach(b=>{const on=+b.dataset.step===n;b.classList.toggle('active',on);on?b.setAttribute('aria-current','step'):b.removeAttribute('aria-current')});['panel1','panel2','panel3'].forEach((id,i)=>$(id).classList.toggle('hidden',i!==n-1));setView(n===1?'mask':'result')}
+function updateCropLabel(){if(!img)return;const r=cropRect(W,H);$('cropDimensions').textContent=r.w+' × '+r.h+' px'}
+$$('.step').forEach(b=>b.onclick=()=>setStep(+b.dataset.step));$$('[data-next]').forEach(b=>b.onclick=()=>setStep(+b.dataset.next));$$('[data-prev]').forEach(b=>b.onclick=()=>setStep(+b.dataset.prev));
+$('viewResult').onclick=()=>setView('result');$('viewMask').onclick=()=>setView('mask');$('viewOriginal').onclick=()=>setView('original');$('maskBtn').onclick=()=>setView('mask');
+$('maskOverlay').onclick=$('maskOnly').onclick=e=>{maskMode=e.currentTarget.id==='maskOnly'?'only':'overlay';$('maskOverlay').classList.toggle('active',maskMode==='overlay');$('maskOnly').classList.toggle('active',maskMode==='only');maskViewStale=true;setView('mask')};
+SLIDERS.forEach(id=>$(id).addEventListener('input',()=>{updateLabels();if(img){invalidate(LEVEL[id]);schedule()}}));
+const glowChanged=()=>{syncGlowUI();if(img){invalidate(1);schedule()}};
+$('adaptiveMode').onclick=()=>{glowMode='adaptive';glowChanged()};$('tintMode').onclick=()=>{glowMode='tint';glowChanged()};
+$$('.tone').forEach(b=>b.onclick=()=>{tone=b.dataset.tone;custom=null;glowChanged()});
+$('customColor').oninput=()=>{$('customHex').textContent=$('customColor').value.toUpperCase()+' · tap Apply'};
+$('useCustom').onclick=()=>{custom=hexToRgb($('customColor').value);$('customHex').textContent=toHex(custom)+' · active';glowChanged()};
+$('cropRatio').onchange=()=>{updateCropLabel();schedule()};$('resetCrop').onclick=()=>{$('cropRatio').value='original';updateCropLabel();schedule();status('Crop reset to the original frame.')};
+$('autoThreshold').onclick=()=>{if(!img)return status('Open a photo first.');const hist=new Uint32Array(256),d=src.data;
+ for(let i=0;i<d.length;i+=4)hist[(.2126*d[i]+.7152*d[i+1]+.0722*d[i+2])|0]++;
+ let acc=0,L=255;const goal=PW*PH*.06;for(;L>0;L--){acc+=hist[L];if(acc>=goal)break}
+ const t=Math.min(96,Math.max(40,Math.round(L/2.55)-3));$('threshold').value=t;$('selectSoft').value=10;updateLabels();invalidate(0);schedule();status('Auto: threshold '+t+'% selects about the brightest 6% of pixels.')};
+// Hold-to-compare: restores whichever view you were on, and only reacts while actually pressed.
+const cmp=$('compare');cmp.addEventListener('pointerdown',e=>{e.preventDefault();cmp.setPointerCapture(e.pointerId);if(holdPrev===null){holdPrev=view;setView('original')}});
+['pointerup','pointercancel'].forEach(t=>cmp.addEventListener(t,()=>{if(holdPrev!==null){const v=holdPrev;holdPrev=null;setView(v)}}));cmp.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ---------- presets ---------- */
+const KEY='halo-presets',API='/.netlify/functions/presets';
+const getPresets=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch{return{}}};
+function refreshPresets(sel=''){const s=$('presetSelect');s.replaceChildren(new Option('Choose a preset…',''));Object.keys(getPresets()).sort().forEach(n=>s.add(new Option(n,n)));s.value=sel}
+function readSettings(){const s={};SLIDERS.forEach(k=>s[k]=$(k).value);return{...s,tone,glowMode,customColor:custom?toHex(custom):null}}
+function applySettings(v){SLIDERS.forEach(k=>{const e=$(k),n=Number(v[k]);if(Number.isFinite(n))e.value=Math.min(+e.max,Math.max(+e.min,n))});
+ tone=TONES[v.tone]?v.tone:'pink';glowMode=v.glowMode==='tint'?'tint':'adaptive';custom=/^#[0-9a-f]{6}$/i.test(v.customColor||'')?hexToRgb(v.customColor):null;if(custom)$('customColor').value=v.customColor.toLowerCase();
+ syncGlowUI();updateLabels();if(img){invalidate(0);schedule()}}
+$('savePreset').onclick=()=>{const name=$('presetName').value.trim().slice(0,40);if(!name)return status('Type a preset name first.');
+ const p=getPresets();p[name]=readSettings();try{localStorage.setItem(KEY,JSON.stringify(p))}catch{return status('This browser blocked saving presets.')}
+ refreshPresets(name);$('presetName').value='';status('Preset saved: '+name);
+ if(backendOK)fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,preset:p[name]})}).catch(()=>{})};
+$('loadPreset').onclick=()=>{const n=$('presetSelect').value,p=getPresets();if(!n)return status('Choose a saved preset first.');if(!p[n])return status('That preset is gone.');applySettings(p[n]);status('Loaded preset: '+n)};
+// Optional shared backend (Netlify). Only contacted over http(s); POSTs are skipped if the GET never succeeded.
+if(/^https?:$/.test(location.protocol))fetch(API).then(r=>r.ok?r.json():null).then(d=>{if(!d||!d.presets)return;backendOK=true;const l=getPresets();Object.assign(l,d.presets);try{localStorage.setItem(KEY,JSON.stringify(l))}catch{}refreshPresets()}).catch(()=>{});
+
+/* ---------- loading ---------- */
+function loadFile(f){if(!f)return;if(f.type&&!f.type.startsWith('image/'))return status('Choose an image file (JPG, PNG, WebP…).');
+ status('Opening photo…');const url=URL.createObjectURL(f),im=new Image();
+ im.onload=()=>{URL.revokeObjectURL(url);setImage(im,f.name)};im.onerror=()=>{URL.revokeObjectURL(url);status('Could not open this file. Try a JPG, PNG or WebP.')};im.src=url}
+function setImage(im,name){img=im;filename=(name||'photo').replace(/\.[^.]+$/,'');W=im.naturalWidth;H=im.naturalHeight;
+ const k=Math.min(1,PREVIEW_MAX/Math.max(W,H));PW=Math.max(1,Math.round(W*k));PH=Math.max(1,Math.round(H*k));
+ cvSrc=scaled(im,W,H,PW,PH);src=cvSrc.getContext('2d').getImageData(0,0,PW,PH);out=new ImageData(PW,PH);cvRes=mk(PW,PH);cvMask=mk(PW,PH);mask=glow=null;invalidate(0);
+ $('placeholder').classList.add('hidden');screen.classList.add('on');$('badge').hidden=$('compare').hidden=false;$('badge').textContent=k<1?'PREVIEW '+PW+'×'+PH:'FULL RES';updateCropLabel();setStep(1)}
+$('file').onchange=e=>{loadFile(e.target.files[0]);e.target.value=''};$('pick').onclick=()=>$('file').click();
+const stage=$('stage');['dragenter','dragover'].forEach(t=>stage.addEventListener(t,e=>{e.preventDefault();stage.classList.add('drag')}));
+['dragleave','drop'].forEach(t=>stage.addEventListener(t,e=>{e.preventDefault();stage.classList.remove('drag')}));stage.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
+
+/* ---------- full-resolution export (runs the same pipeline once, in place, then frees memory) ---------- */
+async function exportImage(){
+ if(!img){$('file').click();return}if(exporting)return;exporting=true;$('export').disabled=$('exportCrop').disabled=true;
+ status('Rendering full resolution…');await nextFrame();
+ try{
+  const k=Math.min(1,Math.sqrt(MAX_PIXELS/(W*H))),ew=Math.round(W*k),eh=Math.round(H*k),c=scaled(img,W,H,ew,eh),cx=c.getContext('2d',{willReadFrequently:true}),id=cx.getImageData(0,0,ew,eh),p=params();
+  composite(id.data,id.data,computeGlow(id.data,computeMask(id.data,ew,eh,p),ew,eh,p),ew,eh,p.amount);cx.putImageData(id,0,0);
+  const r=cropRect(ew,eh);let target=c;
+  if(r.w!==ew||r.h!==eh){target=mk(r.w,r.h);target.getContext('2d').drawImage(c,r.x,r.y,r.w,r.h,0,0,r.w,r.h);c.width=0}
+  const blob=await new Promise(res=>target.toBlob(res,'image/png'));if(!blob)throw new Error('encode');
+  const a=document.createElement('a');a.download=filename+'-halo'+($('cropRatio').value==='original'?'':'-crop')+'.png';a.href=URL.createObjectURL(blob);document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),15000);
+  status('Exported '+r.w+' × '+r.h+' px'+(k<1?' (reduced from '+W+' × '+H+' to fit this browser\'s canvas limit)':''));target.width=0;
+ }catch(e){status('Export failed. This photo may be too large for this browser; try a smaller one.')}
+ exporting=false;$('export').disabled=$('exportCrop').disabled=false}
+$('export').onclick=$('exportCrop').onclick=exportImage;
+
+updateLabels();syncGlowUI();refreshPresets();setStep(1);
+})();
+</script></body></html>

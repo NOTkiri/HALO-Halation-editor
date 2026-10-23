@@ -1,0 +1,10 @@
+{
+  "name": "halo-halation-editor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HALO browser-based halation editor with optional shared presets on Netlify",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.2.0"
+  }
+}
